@@ -2,9 +2,11 @@ package eu.jhomlala.steambot.main;
 
 import org.apache.log4j.Logger;
 
+import uk.co.thomasc.steamkit.base.generated.steamlanguage.EChatEntryType;
 import uk.co.thomasc.steamkit.base.generated.steamlanguage.EPersonaState;
 import uk.co.thomasc.steamkit.base.generated.steamlanguage.EResult;
 import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.SteamFriends;
+import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.FriendMsgCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.FriendsListCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamuser.SteamUser;
 import uk.co.thomasc.steamkit.steam3.handlers.steamuser.callbacks.LoggedOnCallback;
@@ -12,8 +14,10 @@ import uk.co.thomasc.steamkit.steam3.handlers.steamuser.types.LogOnDetails;
 import uk.co.thomasc.steamkit.steam3.steamclient.SteamClient;
 import uk.co.thomasc.steamkit.steam3.steamclient.callbackmgr.CallbackMsg;
 import uk.co.thomasc.steamkit.steam3.steamclient.callbacks.ConnectedCallback;
+import uk.co.thomasc.steamkit.types.steamid.SteamID;
 import uk.co.thomasc.steamkit.util.cSharp.ip.ProtocolType;
 import eu.jhomlala.steambot.configuration.BotConfiguration;
+import eu.jhomlala.steambot.controllers.FriendChatController;
 import eu.jhomlala.steambot.controllers.FriendListController;
 import eu.jhomlala.steambot.exceptions.InvalidSteamBotConfigurationException;
 import eu.jhomlala.steambot.utils.Log;
@@ -29,6 +33,7 @@ public class SteamBot {
 	private SteamFriends steamFriends;
 	//Controllers:
 	private FriendListController friendListController;
+	private FriendChatController friendChatController;
 	
 	
 	public SteamBot(BotConfiguration botConfiguration) throws InvalidSteamBotConfigurationException {
@@ -43,7 +48,9 @@ public class SteamBot {
 		this.botThread = new BotThread(this);
 		this.steamClient.connect();
 		this.friendListController = new FriendListController();
+		this.friendChatController = new FriendChatController(this);
 		this.steamFriends = steamClient.getHandler(SteamFriends.class);
+		
 	}
 	
 	
@@ -147,6 +154,19 @@ public class SteamBot {
 	{
 		if (state == null) throw new IllegalArgumentException("State is empty");
 		steamFriends.setPersonaState(state);
+	}
+
+
+	public void sendMessage(SteamID sender, EChatEntryType type, String message) {
+		steamFriends.sendChatMessage(sender, type, message);
+		
+	}
+
+
+	public void onFriendMessage(CallbackMsg callback) {
+		FriendMsgCallback friendMsgCallback = (FriendMsgCallback) callback;
+		friendChatController.handleChat(friendMsgCallback);
+		
 	}
 	
 }

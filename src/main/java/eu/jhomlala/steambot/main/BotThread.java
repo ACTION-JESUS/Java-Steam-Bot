@@ -3,6 +3,7 @@ package eu.jhomlala.steambot.main;
 import org.apache.log4j.Logger;
 
 import eu.jhomlala.steambot.utils.Log;
+import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.FriendMsgCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.FriendsListCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamuser.callbacks.LoggedOnCallback;
 import uk.co.thomasc.steamkit.steam3.steamclient.SteamClient;
@@ -51,6 +52,10 @@ public class BotThread extends Thread{
 				if (callback instanceof FriendsListCallback)
 				{
 					steamBot.onFriendsListCallback(callback);
+				}
+				if (callback instanceof FriendMsgCallback)
+				{
+					steamBot.onFriendMessage(callback);
 				}
 				
 			}

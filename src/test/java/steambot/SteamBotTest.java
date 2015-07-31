@@ -16,6 +16,8 @@ public class SteamBotTest {
 		
 		final SteamBot steambot = new SteamBot(config);
 		steambot.start();
+		
+		
 	}
 
 }

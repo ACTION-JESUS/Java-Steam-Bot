@@ -17,7 +17,7 @@ public class BotConfiguration {
 		private String steamGuardCode;
 		private boolean acceptFriendRequest = false;
 		private boolean acceptTradeRequest = false;
-		private int friendMessagesCacheSize = 1000;
+		private int friendMessagesCacheSize = 10000;
 		public Builder setUsername(String username)
 		{
 			this.username = username;
