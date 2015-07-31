@@ -5,6 +5,8 @@ import org.apache.log4j.Logger;
 import eu.jhomlala.steambot.utils.Log;
 import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.FriendMsgCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.FriendsListCallback;
+import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.PersonaStateCallback;
+import uk.co.thomasc.steamkit.steam3.handlers.steamtrading.callbacks.TradeProposedCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamuser.callbacks.LoggedOnCallback;
 import uk.co.thomasc.steamkit.steam3.steamclient.SteamClient;
 import uk.co.thomasc.steamkit.steam3.steamclient.callbackmgr.CallbackMsg;
@@ -56,6 +58,14 @@ public class BotThread extends Thread{
 				if (callback instanceof FriendMsgCallback)
 				{
 					steamBot.onFriendMessage(callback);
+				}
+				if (callback instanceof PersonaStateCallback)
+				{
+					steamBot.onPersonaStateCallback(callback);
+				}
+				if (callback instanceof TradeProposedCallback)
+				{
+					steamBot.onTradeProposedCallback(callback);
 				}
 				
 			}

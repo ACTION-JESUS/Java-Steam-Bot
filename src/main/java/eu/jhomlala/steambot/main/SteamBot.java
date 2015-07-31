@@ -8,6 +8,9 @@ import uk.co.thomasc.steamkit.base.generated.steamlanguage.EResult;
 import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.SteamFriends;
 import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.FriendMsgCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.FriendsListCallback;
+import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.PersonaStateCallback;
+import uk.co.thomasc.steamkit.steam3.handlers.steamtrading.SteamTrading;
+import uk.co.thomasc.steamkit.steam3.handlers.steamtrading.callbacks.TradeProposedCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamuser.SteamUser;
 import uk.co.thomasc.steamkit.steam3.handlers.steamuser.callbacks.LoggedOnCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamuser.types.LogOnDetails;
@@ -31,6 +34,7 @@ public class SteamBot {
 	private boolean isRunning;
 	private BotThread botThread;
 	private SteamFriends steamFriends;
+	private SteamTrading steamTrading;
 	//Controllers:
 	private FriendListController friendListController;
 	private FriendChatController friendChatController;
@@ -50,7 +54,7 @@ public class SteamBot {
 		this.friendListController = new FriendListController();
 		this.friendChatController = new FriendChatController(this);
 		this.steamFriends = steamClient.getHandler(SteamFriends.class);
-		
+		this.steamTrading = steamClient.getHandler(SteamTrading.class);
 	}
 	
 	
@@ -138,7 +142,14 @@ public class SteamBot {
 			}
 			else
 			{
-				log.info("Error code: "+loggedOnCallBack.getResult());
+				if (loggedOnCallBack.getResult() == EResult.InvalidLoginAuthCode)
+				{
+					log.info("Current Steam Guard code has expired.");
+				}
+				else
+				{
+					log.info("Error code: "+loggedOnCallBack.getResult());
+				}
 			}
 		}
 		
@@ -148,6 +159,13 @@ public class SteamBot {
 	{
 		FriendsListCallback friendsListCallback = (FriendsListCallback) callbackReceived;
 		friendListController.updateFriendList(friendsListCallback.getFriendList());		
+	}
+	
+	public void onPersonaStateCallback(CallbackMsg callbackReceived)
+	{
+		PersonaStateCallback personaStateCallback = (PersonaStateCallback) callbackReceived;
+		
+	
 	}
 	
 	public void setPersonaState(EPersonaState state)
@@ -167,6 +185,15 @@ public class SteamBot {
 		FriendMsgCallback friendMsgCallback = (FriendMsgCallback) callback;
 		friendChatController.handleChat(friendMsgCallback);
 		
+	}
+	
+	public void onTradeProposedCallback(CallbackMsg callback)
+	{
+		TradeProposedCallback tradeProposedCallback = (TradeProposedCallback) callback;
+		SteamID steamID = tradeProposedCallback.getOtherClient();
+		
+		sendMessage(steamID,EChatEntryType.ChatMsg,"I dont accept direct trades.Type !trade to start trading with me.");
+		steamTrading.cancelTrade(steamID);
 	}
 	
 }

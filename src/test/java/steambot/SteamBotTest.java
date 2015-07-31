@@ -9,9 +9,9 @@ public class SteamBotTest {
 	public static void main(String[] args) throws InvalidSteamBotConfigurationException {
 	
 		BotConfiguration config = new BotConfiguration.Builder().
-										setUsername("khomlala3").
-										setPassword("pa55word2015").
-										//setSteamGuardCode("N549D").
+										setUsername("").
+										setPassword("").
+										setSteamGuardCode("").
 										build();
 		
 		final SteamBot steambot = new SteamBot(config);
