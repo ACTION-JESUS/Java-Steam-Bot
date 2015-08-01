@@ -1,8 +1,8 @@
 # Java-Steam-Bot
 Steam Bot based od Steam-Kit
 
-This bot is based on Steam-Kit Java port done by Top-Cat. Here you can download Steam-Kit: 
-https://github.com/Top-Cat/SteamKit-Java
+This bot is based on Steam-Kit Java port done by Top-Cat. Here you can download updated Steam-Kit version: 
+https://github.com/jhomlala/SteamKit-Java
 
 To see working examples, please check test package.
 
