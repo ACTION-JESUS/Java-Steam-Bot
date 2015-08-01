@@ -8,6 +8,7 @@ import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.FriendsList
 import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.PersonaStateCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamtrading.callbacks.TradeProposedCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamuser.callbacks.LoggedOnCallback;
+import uk.co.thomasc.steamkit.steam3.handlers.steamuser.callbacks.LoginKeyCallback;
 import uk.co.thomasc.steamkit.steam3.steamclient.SteamClient;
 import uk.co.thomasc.steamkit.steam3.steamclient.callbackmgr.CallbackMsg;
 import uk.co.thomasc.steamkit.steam3.steamclient.callbacks.ConnectedCallback;
@@ -50,6 +51,7 @@ public class BotThread extends Thread{
 				if (callback instanceof LoggedOnCallback)
 				{
 					steamBot.onLoggedIn(callback);
+					
 				}
 				if (callback instanceof FriendsListCallback)
 				{
@@ -66,6 +68,10 @@ public class BotThread extends Thread{
 				if (callback instanceof TradeProposedCallback)
 				{
 					steamBot.onTradeProposedCallback(callback);
+				}
+				if (callback instanceof LoginKeyCallback)
+				{
+					steamBot.onLoginKeyCallback(callback);
 				}
 				
 			}

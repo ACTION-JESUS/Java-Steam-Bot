@@ -6,3 +6,4 @@ public class SteamBotConfiguration {
 	public static final String authorName = "Jakub Homlala";
 	public static final String relaseDate = "August 2015";
 }
+ 

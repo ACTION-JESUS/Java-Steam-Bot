@@ -1,6 +1,16 @@
 package eu.jhomlala.steambot.main;
 
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.InputStreamReader;
+import java.net.URL;
+
+import javax.net.ssl.HttpsURLConnection;
+
 import org.apache.log4j.Logger;
+
+
+
 
 import uk.co.thomasc.steamkit.base.generated.steamlanguage.EChatEntryType;
 import uk.co.thomasc.steamkit.base.generated.steamlanguage.EPersonaState;
@@ -13,19 +23,26 @@ import uk.co.thomasc.steamkit.steam3.handlers.steamtrading.SteamTrading;
 import uk.co.thomasc.steamkit.steam3.handlers.steamtrading.callbacks.TradeProposedCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamuser.SteamUser;
 import uk.co.thomasc.steamkit.steam3.handlers.steamuser.callbacks.LoggedOnCallback;
+import uk.co.thomasc.steamkit.steam3.handlers.steamuser.callbacks.LoginKeyCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamuser.types.LogOnDetails;
 import uk.co.thomasc.steamkit.steam3.steamclient.SteamClient;
 import uk.co.thomasc.steamkit.steam3.steamclient.callbackmgr.CallbackMsg;
 import uk.co.thomasc.steamkit.steam3.steamclient.callbacks.ConnectedCallback;
+import uk.co.thomasc.steamkit.steam3.webapi.WebAPI;
+import uk.co.thomasc.steamkit.types.keyvalue.KeyValue;
 import uk.co.thomasc.steamkit.types.steamid.SteamID;
+import uk.co.thomasc.steamkit.util.KeyDictionary;
+import uk.co.thomasc.steamkit.util.WebHelpers;
 import uk.co.thomasc.steamkit.util.cSharp.ip.ProtocolType;
+import uk.co.thomasc.steamkit.util.crypto.CryptoHelper;
+import uk.co.thomasc.steamkit.util.crypto.RSACrypto;
 import eu.jhomlala.steambot.configuration.BotConfiguration;
 import eu.jhomlala.steambot.controllers.FriendChatController;
 import eu.jhomlala.steambot.controllers.FriendListController;
 import eu.jhomlala.steambot.exceptions.InvalidSteamBotConfigurationException;
 import eu.jhomlala.steambot.utils.Log;
-
-
+import java.util.Base64;
+import java.util.Base64.Encoder;
 public class SteamBot {
 	
 	private BotConfiguration botConfiguration;
@@ -35,6 +52,9 @@ public class SteamBot {
 	private BotThread botThread;
 	private SteamFriends steamFriends;
 	private SteamTrading steamTrading;
+	private String sessionID;
+	private String token;
+	private String WebApiNounce;
 	//Controllers:
 	private FriendListController friendListController;
 	private FriendChatController friendChatController;
@@ -55,6 +75,9 @@ public class SteamBot {
 		this.friendChatController = new FriendChatController(this);
 		this.steamFriends = steamClient.getHandler(SteamFriends.class);
 		this.steamTrading = steamClient.getHandler(SteamTrading.class);
+		this.sessionID = "";
+		this.token = "";
+		
 	}
 	
 	
@@ -130,6 +153,8 @@ public class SteamBot {
 			log.info("Logged into steam network.");
 			log.info("Account STEAMID:"+ loggedOnCallBack.getClientSteamID());
 			setPersonaState(EPersonaState.Online);
+			log.info("NOUNCE:"+loggedOnCallBack.getWebAPIUserNonce());
+			this.WebApiNounce = loggedOnCallBack.getWebAPIUserNonce();
 			
 		}
 		else
@@ -192,8 +217,93 @@ public class SteamBot {
 		TradeProposedCallback tradeProposedCallback = (TradeProposedCallback) callback;
 		SteamID steamID = tradeProposedCallback.getOtherClient();
 		
-		sendMessage(steamID,EChatEntryType.ChatMsg,"I dont accept direct trades.Type !trade to start trading with me.");
-		steamTrading.cancelTrade(steamID);
+		//sendMessage(steamID,EChatEntryType.ChatMsg,"I dont accept direct trades.Type !trade to start trading with me.");
+		//steamTrading.cancelTrade(steamID);
+		log.info("Accept trade request from"+steamID);
+		steamTrading.trade(steamID);
+	}
+	
+	
+	boolean authenticate(LoginKeyCallback callback) throws Exception {
+		
+	
+		  Base64.Encoder encoder64 = Base64.getUrlEncoder();
+		log.info("Universe:"+steamClient.getConnectedUniverse());
+		log.info("STEAMID:"+steamClient.getSteamId().convertToLong());
+		
+		int myuniqueid = callback.getUniqueId();
+		Encoder en;
+		String uniqueIdString = String.valueOf(myuniqueid);
+		byte[] uniqueid = uniqueIdString.getBytes("UTF-8");
+		String sessionID = encoder64.encodeToString(uniqueid);
+		
+		
+		byte[] sessionKey = CryptoHelper.GenerateRandomBlock(32);
+		byte[] cryptedSessionKey = null;
+		
+		
+		RSACrypto rsa = new RSACrypto(KeyDictionary.getPublicKey(steamClient.getConnectedUniverse()));
+		cryptedSessionKey = rsa.encrypt(sessionKey);
+		
+		byte[] loginKey = new byte[20];
+		byte[] myLoginKey = this.WebApiNounce.getBytes("ASCII");
+		
+		System.out.println(myLoginKey.length); 
+		System.arraycopy(myLoginKey,0,loginKey,0,myLoginKey.length);
+		
+		byte[] cryptedLoginKey = CryptoHelper.SymmetricEncrypt(loginKey,sessionKey);
+		
+		
+		String urlParameters="steamid="+getSteamClient().getSteamId().convertToLong()+"&sessionkey="+WebHelpers.UrlEncode(cryptedSessionKey)+"&encrypted_loginkey="+WebHelpers.UrlEncode(cryptedLoginKey)+"&format=vdf";
+		
+		
+		final WebAPI userAuth = new WebAPI("ISteamUserAuth", "FD6AD4442ED27719F2A42B697B040EF9");
+		userAuth.KeyValueAuthenticate(urlParameters);
+		
+	
+		
+		
+		KeyValue authResult;
+
+		
+		
+		
+		
+		return true;
+	}
+
+
+	public void onLoginKeyCallback(CallbackMsg callback) {
+		
+		LoginKeyCallback loginKeyCallback = (LoginKeyCallback) callback;
+		log.info("Account authenticating.");
+		while(true)
+		{
+			try {
+				if (authenticate(loginKeyCallback))
+				{
+					log.info("Account authenticated.");
+					break;
+				}
+				else
+				{
+					try {
+					    // to sleep 10 seconds
+					    Thread.sleep(2000);
+					} catch (InterruptedException e) {
+					    // recommended because catching InterruptedException clears interrupt flag
+					    Thread.currentThread().interrupt();
+					    // you probably want to quit if the thread is interrupted
+					    return;
+					}
+				}
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
+		
 	}
 	
 }
