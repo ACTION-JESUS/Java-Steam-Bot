@@ -9,8 +9,10 @@ import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.PersonaStat
 import uk.co.thomasc.steamkit.steam3.handlers.steamtrading.callbacks.TradeProposedCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamuser.callbacks.LoggedOnCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamuser.callbacks.LoginKeyCallback;
+import uk.co.thomasc.steamkit.steam3.handlers.steamuser.callbacks.UpdateMachineAuthCallback;
 import uk.co.thomasc.steamkit.steam3.steamclient.SteamClient;
 import uk.co.thomasc.steamkit.steam3.steamclient.callbackmgr.CallbackMsg;
+import uk.co.thomasc.steamkit.steam3.steamclient.callbackmgr.JobCallback;
 import uk.co.thomasc.steamkit.steam3.steamclient.callbacks.ConnectedCallback;
 
 public class BotThread extends Thread{
@@ -72,6 +74,10 @@ public class BotThread extends Thread{
 				if (callback instanceof LoginKeyCallback)
 				{
 					steamBot.onLoginKeyCallback(callback);
+				}
+				if (callback instanceof JobCallback)
+				{
+					steamBot.onUpdateMachineAuth(callback);
 				}
 				
 			}

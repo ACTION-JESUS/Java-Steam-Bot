@@ -97,6 +97,11 @@ public class BotConfiguration {
 	public int getFriendMessagesCacheSize() {
 		return friendMessagesCacheSize;
 	}
+
+
+	public void setSteamGuardCode(String steamGuardCode) {
+		this.steamGuardCode = steamGuardCode;
+	}
 	
 	
 }
