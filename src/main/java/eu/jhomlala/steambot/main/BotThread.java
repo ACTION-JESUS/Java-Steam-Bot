@@ -2,18 +2,17 @@ package eu.jhomlala.steambot.main;
 
 import org.apache.log4j.Logger;
 
-import eu.jhomlala.steambot.utils.Log;
+import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.ChatInviteCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.FriendMsgCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.FriendsListCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.PersonaStateCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamtrading.callbacks.TradeProposedCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamuser.callbacks.LoggedOnCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamuser.callbacks.LoginKeyCallback;
-import uk.co.thomasc.steamkit.steam3.handlers.steamuser.callbacks.UpdateMachineAuthCallback;
-import uk.co.thomasc.steamkit.steam3.steamclient.SteamClient;
 import uk.co.thomasc.steamkit.steam3.steamclient.callbackmgr.CallbackMsg;
 import uk.co.thomasc.steamkit.steam3.steamclient.callbackmgr.JobCallback;
 import uk.co.thomasc.steamkit.steam3.steamclient.callbacks.ConnectedCallback;
+import eu.jhomlala.steambot.utils.Log;
 
 public class BotThread extends Thread{
 	
@@ -42,8 +41,9 @@ public class BotThread extends Thread{
 				CallbackMsg callback = steamBot.getSteamClient().getCallback(true);
 				if (callback != null)
 					log.info("Received callback: "+callback);
-				else
-					log.info("Debug:"+callback);
+				// else
+					// log.info("Debug: (is this it?)"+callback);
+				// uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.ChatInviteCallback@4dae1613
 				steamBot.getSteamClient().waitForCallback(1000);
 				
 				if (callback instanceof ConnectedCallback)
@@ -58,6 +58,10 @@ public class BotThread extends Thread{
 				if (callback instanceof FriendsListCallback)
 				{
 					steamBot.onFriendsListCallback(callback);
+				}
+				if (callback instanceof ChatInviteCallback)
+				{
+					steamBot.onChatInviteCallback(callback);
 				}
 				if (callback instanceof FriendMsgCallback)
 				{
