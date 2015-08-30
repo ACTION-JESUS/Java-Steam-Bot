@@ -31,18 +31,13 @@
 
 package eu.jhomlala.steambot.main;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
-import java.net.URL;
-
-import javax.net.ssl.HttpsURLConnection;
+import java.security.MessageDigest;
+import java.util.Base64;
+import java.util.Base64.Encoder;
+import java.util.Scanner;
 
 import org.apache.log4j.Logger;
 
@@ -50,6 +45,7 @@ import uk.co.thomasc.steamkit.base.generated.steamlanguage.EChatEntryType;
 import uk.co.thomasc.steamkit.base.generated.steamlanguage.EPersonaState;
 import uk.co.thomasc.steamkit.base.generated.steamlanguage.EResult;
 import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.SteamFriends;
+import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.ChatInviteCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.FriendMsgCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.FriendsListCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.PersonaStateCallback;
@@ -74,16 +70,14 @@ import uk.co.thomasc.steamkit.util.WebHelpers;
 import uk.co.thomasc.steamkit.util.cSharp.ip.ProtocolType;
 import uk.co.thomasc.steamkit.util.crypto.CryptoHelper;
 import uk.co.thomasc.steamkit.util.crypto.RSACrypto;
+
+import com.mvmlobby.main.MvMLobbyConfig;
+
 import eu.jhomlala.steambot.configuration.BotConfiguration;
 import eu.jhomlala.steambot.controllers.FriendChatController;
 import eu.jhomlala.steambot.controllers.FriendListController;
 import eu.jhomlala.steambot.exceptions.InvalidSteamBotConfigurationException;
 import eu.jhomlala.steambot.utils.Log;
-
-import java.security.MessageDigest;
-import java.util.Base64;
-import java.util.Base64.Encoder;
-import java.util.Scanner;
 
 public class SteamBot {
 
@@ -217,7 +211,6 @@ public class SteamBot {
 			setPersonaState(EPersonaState.Online);
 			// log.info("NOUNCE:"+loggedOnCallBack.getWebAPIUserNonce());
 			this.WebApiNounce = loggedOnCallBack.getWebAPIUserNonce();
-
 		} else {
 			log.info("Login failed.");
 
@@ -257,7 +250,6 @@ public class SteamBot {
 
 	public void onPersonaStateCallback(CallbackMsg callbackReceived) {
 		PersonaStateCallback personaStateCallback = (PersonaStateCallback) callbackReceived;
-
 	}
 
 	public void setPersonaState(EPersonaState state) {
@@ -380,8 +372,8 @@ public class SteamBot {
 				+ "&encrypted_loginkey="
 				+ WebHelpers.UrlEncode(cryptedLoginKey) + "&format=vdf";
 
-		final WebAPI userAuth = new WebAPI("ISteamUserAuth",
-				"FD6AD4442ED27719F2A42B697B040EF9");
+		final String apiKey = MvMLobbyConfig.getInstance().getSteamAPIKey();
+		final WebAPI userAuth = new WebAPI("ISteamUserAuth", apiKey);
 		return userAuth.KeyValueAuthenticate(urlParameters);
 	}
 
@@ -395,6 +387,9 @@ public class SteamBot {
 				log.info(authenticationRespond.get("token").asString());
 				if (authenticationRespond != null) {
 					log.info("Account authenticated.");
+					
+					// ACTION JESUS:  Correctly set the bot name instead of using the AccountCache default
+					this.steamFriends.setPersonaName(botConfiguration.getBotname());
 
 					break;
 				} else {
@@ -417,6 +412,49 @@ public class SteamBot {
 
 		}
 
+	}
+	
+	
+	// ChatInviteCallback
+	public void onChatInviteCallback(CallbackMsg callback) {
+		ChatInviteCallback chatInviteCallback = (ChatInviteCallback) callback;
+		
+		if (chatInviteCallback.getChatRoomType().toString().equals("Lobby")) {
+
+			SteamID lobbyId =  chatInviteCallback.getChatRoomID();
+			SteamID senderSteamID = chatInviteCallback.getFriendChatID();		// the person who sent the invite
+
+			/*
+			  Existing bot output:
+			 
+			 	Your lobby ID is:  109775242299196025
+
+				Players can join your lobby with this URL:
+				steam://joinlobby/440/109775242299196025
+				
+				Or connect via console with:
+				connect_lobby 109775242299196025
+				
+				---- new message ------------------------------
+				Connect with this console command:
+				connect_lobby 109775242299241580
+				
+				Or join using this link:
+				steam://joinlobby/440/109775242299241580
+				
+				Click here to set up a team and send invites:
+				http://mvmlobby.com/teams.php
+
+			 */
+			StringBuilder msg = new StringBuilder();
+			msg.append("\nConnect with this console command:\n")
+				.append("connect_lobby ").append(lobbyId.convertToLong()).append("\n\n")
+				.append("Or join using this link:\n")
+				.append("steam://joinlobby/440/").append(lobbyId.convertToLong()).append("\n\n");
+
+			sendMessage(senderSteamID, EChatEntryType.ChatMsg, msg.toString());
+
+		}
 	}
 
 }
