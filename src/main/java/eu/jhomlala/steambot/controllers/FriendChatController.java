@@ -50,19 +50,8 @@ public class FriendChatController {
 		
 		String callbackMessage = callback.getMessage();
 		String returnMessage = null;
-		if (callbackMessage.equals("!buying"))
-		{
-			
-		}
-		if(callbackMessage.equals("!selling"))
-		{
-			
-		}
-		if(callbackMessage.equals("!message"))
-		{
-			
-		}
-		if(callbackMessage.equals("!about"))
+
+		if(callbackMessage.equals("about"))
 		{
 			returnMessage = "\nJava SteamBot"
 					+"\n----------------------------------------"
@@ -72,32 +61,15 @@ public class FriendChatController {
 					+"\n----------------------------------------";
 			
 		}
-		if (callbackMessage.equals("!help"))
-		{
-			returnMessage = getCommandList();
-		}
+
 		if (returnMessage == null)
 		{
-			returnMessage = "I dont know this command.To check available commands, please"
-					+" write: !help";
+			returnMessage = "You can chat with me but I don't do anything but give you your MvM lobby ID.";
 		}
 		
 		
 		steamBot.sendMessage(callback.getSender(),callback.getEntryType(),returnMessage);
 		
-	}
-	
-	private String getCommandList()
-	{
-		String commandList = "\nCommand List:"
-							+"\n----------------------------------------------------"
-							+"\n!buying - show my buy offers"
-							+"\n!selling - show my seling offers"
-							+"\n!message - leave message for bot owner"
-							+"\n!about - show info about bot"
-							+"\n!help - show help"
-							+"\n-----------------------------------------------------";
-		return commandList;
 	}
 	
 	public List<SteamChat> getAllMessages()
