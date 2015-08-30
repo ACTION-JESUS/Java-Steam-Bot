@@ -2,6 +2,7 @@ package eu.jhomlala.steambot.configuration;
 
 public class BotConfiguration {
 
+	private String botname;
 	private String username;
 	private String password;
 	private String steamGuardCode;
@@ -12,12 +13,19 @@ public class BotConfiguration {
 
 	public static class Builder
 	{
+		private String botname;
 		private String username;
 		private String password;
 		private String steamGuardCode;
 		private boolean acceptFriendRequest = false;
 		private boolean acceptTradeRequest = false;
 		private int friendMessagesCacheSize = 10000;
+
+		public Builder setBotname(String botname) {
+			this.botname = botname;
+			return this;
+		}
+
 		public Builder setUsername(String username)
 		{
 			this.username = username;
@@ -62,6 +70,7 @@ public class BotConfiguration {
 	}
 	
 	private BotConfiguration(Builder builder) {
+		this.botname = builder.botname;
 		this.username = builder.username;
 		this.password = builder.password;
 		this.steamGuardCode = builder.steamGuardCode;
@@ -70,6 +79,9 @@ public class BotConfiguration {
 		this.friendMessagesCacheSize = builder.friendMessagesCacheSize;
 	}
 	
+	public String getBotname() {
+		return botname;
+	}
 	
 	public String getUsername() {
 		return username;
