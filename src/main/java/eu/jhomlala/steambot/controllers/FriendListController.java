@@ -1,15 +1,14 @@
 package eu.jhomlala.steambot.controllers;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import eu.jhomlala.steambot.utils.Log;
 import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.types.Friend;
 import uk.co.thomasc.steamkit.types.steamid.SteamID;
+import eu.jhomlala.steambot.utils.Log;
 public class FriendListController {
 
 	private List<Friend> friendList;
