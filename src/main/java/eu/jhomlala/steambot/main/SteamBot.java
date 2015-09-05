@@ -84,13 +84,13 @@ public class SteamBot {
 	private BotConfiguration botConfiguration;
 	private SteamClient steamClient;
 	private Logger log;
-	private boolean isRunning;
+	// private boolean isRunning;
 	private BotThread botThread;
 	private SteamFriends steamFriends;
 	private SteamTrading steamTrading;
 	private SteamUser steamUser;
-	private String sessionID;
-	private String token;
+	// private String sessionID;
+	// private String token;
 	private String WebApiNounce;
 
 	// Controllers:
@@ -107,7 +107,7 @@ public class SteamBot {
 		this.botConfiguration = botConfiguration;
 		this.log = Log.getInstance();
 		this.steamClient = new SteamClient(ProtocolType.Tcp);
-		this.isRunning = false;
+		// this.isRunning = false;
 
 		this.steamClient.connect();
 		this.friendListController = new FriendListController();
@@ -115,8 +115,8 @@ public class SteamBot {
 		this.steamFriends = steamClient.getHandler(SteamFriends.class);
 		this.steamTrading = steamClient.getHandler(SteamTrading.class);
 		this.steamUser = steamClient.getHandler(SteamUser.class);
-		this.sessionID = "";
-		this.token = "";
+		// this.sessionID = "";
+		// this.token = "";
 
 	}
 
@@ -450,7 +450,10 @@ public class SteamBot {
 			msg.append("\nConnect with this console command:\n")
 				.append("connect_lobby ").append(lobbyId.convertToLong()).append("\n\n")
 				.append("Or join using this link:\n")
-				.append("steam://joinlobby/440/").append(lobbyId.convertToLong()).append("\n\n");
+				.append("steam://joinlobby/440/").append(lobbyId.convertToLong()).append("\n\n")
+				.append("Create a Two Cities Veterans event here:\n")
+				.append("http://steamcommunity.com/groups/twocitiesveterans/events")
+			;
 
 			sendMessage(senderSteamID, EChatEntryType.ChatMsg, msg.toString());
 
