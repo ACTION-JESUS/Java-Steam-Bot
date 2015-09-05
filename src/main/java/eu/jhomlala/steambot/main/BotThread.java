@@ -12,6 +12,7 @@ import uk.co.thomasc.steamkit.steam3.handlers.steamuser.callbacks.LoginKeyCallba
 import uk.co.thomasc.steamkit.steam3.steamclient.callbackmgr.CallbackMsg;
 import uk.co.thomasc.steamkit.steam3.steamclient.callbackmgr.JobCallback;
 import uk.co.thomasc.steamkit.steam3.steamclient.callbacks.ConnectedCallback;
+import uk.co.thomasc.steamkit.steam3.steamclient.callbacks.DisconnectedCallback;
 import eu.jhomlala.steambot.utils.Log;
 
 public class BotThread extends Thread{
@@ -49,46 +50,42 @@ public class BotThread extends Thread{
 				if (callback instanceof ConnectedCallback)
 				{
 					steamBot.onConnectedCallback(callback);
-				}
-				if (callback instanceof LoggedOnCallback)
+				} else if (callback instanceof LoggedOnCallback)
 				{
 					steamBot.onLoggedIn(callback);
 					
-				}
-				if (callback instanceof FriendsListCallback)
+				} else if (callback instanceof FriendsListCallback)
 				{
 					steamBot.onFriendsListCallback(callback);
-				}
-				if (callback instanceof ChatInviteCallback)
+				} else if (callback instanceof ChatInviteCallback)
 				{
 					steamBot.onChatInviteCallback(callback);
-				}
-				if (callback instanceof FriendMsgCallback)
+				} else if (callback instanceof FriendMsgCallback)
 				{
 					steamBot.onFriendMessage(callback);
-				}
-				if (callback instanceof PersonaStateCallback)
+				} else if (callback instanceof PersonaStateCallback)
 				{
 					steamBot.onPersonaStateCallback(callback);
-				}
-				if (callback instanceof TradeProposedCallback)
+				} else if (callback instanceof TradeProposedCallback)
 				{
 					steamBot.onTradeProposedCallback(callback);
-				}
-				if (callback instanceof LoginKeyCallback)
+				} else if (callback instanceof LoginKeyCallback)
 				{
 					steamBot.onLoginKeyCallback(callback);
-				}
-				if (callback instanceof JobCallback)
+				} else if (callback instanceof JobCallback)
 				{
 					steamBot.onUpdateMachineAuth(callback);
+				} else if (callback instanceof JobCallback)
+				{
+					steamBot.onUpdateMachineAuth(callback);
+				} else if (callback instanceof DisconnectedCallback) {
+					steamBot.restart();
 				}
-				
 			}
 			else
 			{
 				try {
-					sleep(1000);
+					sleep(250);
 					//System.out.println("WAIT");
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
