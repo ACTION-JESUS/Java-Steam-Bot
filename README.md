@@ -1,7 +1,7 @@
 ACTION JESUS' setup notes
 =========================
 
-Steamkit project setup
+# Steamkit project setup
 
 1) Create a jar file from the classes in "resources":
 	cd SteamKit-Java/src/main/resources/uk/co/thomasc/steamkit/base/generated
@@ -26,7 +26,7 @@ Steamkit project setup
 	Download jce_policy-8.zip and unzip to $JAVA_HOME/jre/lib/security 
 
 
-Steambot project setup
+# Steambot project setup
 
 1) Download and add the following JAR files to to Java Build Path->Libraries->Add External JARs:
 	hamcrest-core-1.3.jar
