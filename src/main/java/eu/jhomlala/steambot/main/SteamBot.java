@@ -244,8 +244,7 @@ public class SteamBot {
 
 	public void onFriendsListCallback(CallbackMsg callbackReceived) {
 		FriendsListCallback friendsListCallback = (FriendsListCallback) callbackReceived;
-		friendListController.updateFriendList(friendsListCallback
-				.getFriendList());
+		friendListController.updateFriendList(steamFriends, friendsListCallback.getFriendList());
 	}
 
 	public void onPersonaStateCallback(CallbackMsg callbackReceived) {
