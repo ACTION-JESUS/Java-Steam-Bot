@@ -12,6 +12,7 @@ public class MvMLobbyBot {
 		MvMLobbyConfig lobbyConfig = MvMLobbyConfig.getInstance();
 
 		BotConfiguration.Builder builder = new BotConfiguration.Builder()
+								.setAcceptFriendRequest(true)
 								.setBotname(lobbyConfig.getBotname())
 								.setUsername(lobbyConfig.getSteamUserId())
 								.setPassword(lobbyConfig.getSteamPassword());
