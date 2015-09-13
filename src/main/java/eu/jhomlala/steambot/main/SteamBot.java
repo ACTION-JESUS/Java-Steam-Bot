@@ -70,13 +70,9 @@ import uk.co.thomasc.steamkit.util.WebHelpers;
 import uk.co.thomasc.steamkit.util.cSharp.ip.ProtocolType;
 import uk.co.thomasc.steamkit.util.crypto.CryptoHelper;
 import uk.co.thomasc.steamkit.util.crypto.RSACrypto;
-
-import com.mvmlobby.main.MvMLobbyConfig;
-
 import eu.jhomlala.steambot.configuration.BotConfiguration;
 import eu.jhomlala.steambot.controllers.FriendChatController;
 import eu.jhomlala.steambot.controllers.FriendListController;
-import eu.jhomlala.steambot.exceptions.InvalidSteamBotConfigurationException;
 import eu.jhomlala.steambot.utils.Log;
 
 public class SteamBot {
@@ -97,14 +93,9 @@ public class SteamBot {
 	private FriendListController friendListController;
 	private FriendChatController friendChatController;
 
-	public SteamBot(BotConfiguration botConfiguration)
-			throws InvalidSteamBotConfigurationException {
+	public SteamBot() {
 
-		if (botConfiguration == null)
-			throw new InvalidSteamBotConfigurationException(
-					"Configuration is empty.");
-
-		this.botConfiguration = botConfiguration;
+		this.botConfiguration = BotConfiguration.getInstance();
 		this.log = Log.getInstance();
 		this.steamClient = new SteamClient(ProtocolType.Tcp);
 		// this.isRunning = false;
@@ -134,6 +125,8 @@ public class SteamBot {
 	public void restart() {
 		steamClient.disconnect();
 		stop();
+		log.info("restarting in 2 seconds");
+		try {Thread.sleep(2000);} catch (Exception e) {};
 		steamClient.connect();
 		start();
 
@@ -172,8 +165,8 @@ public class SteamBot {
 		}
 
 		LogOnDetails logOnDetails = new LogOnDetails();
-		logOnDetails.username = botConfiguration.getUsername();
-		logOnDetails.password = botConfiguration.getPassword();
+		logOnDetails.username = botConfiguration.getSteamUserId();
+		logOnDetails.password = botConfiguration.getSteamPassword();
 
 		if (botConfiguration.getSteamGuardCode() != null)
 			logOnDetails.authCode = botConfiguration.getSteamGuardCode();
@@ -371,7 +364,7 @@ public class SteamBot {
 				+ "&encrypted_loginkey="
 				+ WebHelpers.UrlEncode(cryptedLoginKey) + "&format=vdf";
 
-		final String apiKey = MvMLobbyConfig.getInstance().getSteamAPIKey();
+		final String apiKey = botConfiguration.getSteamAPIKey();
 		final WebAPI userAuth = new WebAPI("ISteamUserAuth", apiKey);
 		return userAuth.KeyValueAuthenticate(urlParameters);
 	}
