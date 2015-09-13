@@ -1,5 +1,4 @@
 package eu.jhomlala.steambot.controllers;
-import eu.jhomlala.steambot.configuration.SteamBotConfiguration;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -7,6 +6,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.FriendMsgCallback;
+import eu.jhomlala.steambot.configuration.BotConfiguration;
 import eu.jhomlala.steambot.controllers.models.SteamChat;
 import eu.jhomlala.steambot.main.SteamBot;
 import eu.jhomlala.steambot.utils.Log;
@@ -53,11 +53,12 @@ public class FriendChatController {
 
 		if(callbackMessage.equals("about"))
 		{
+			BotConfiguration config = BotConfiguration.getInstance();
 			returnMessage = "\nJava SteamBot"
 					+"\n----------------------------------------"
-					+"\nVersion:" +SteamBotConfiguration.currentBotVersion
-					+"\nAuthor:" + SteamBotConfiguration.authorName
-					+"\nRelease date: "+SteamBotConfiguration.relaseDate
+					+"\nVersion:" +config.getVersion()
+					+"\nAuthor:" + config.getAuthor()
+					+"\nRelease date: "+config.getRelease_date()
 					+"\n----------------------------------------";
 			
 		}
