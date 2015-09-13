@@ -86,7 +86,7 @@ public class BotThread extends Thread{
 			else
 			{
 				try {
-					sleep(250);
+					sleep(200);
 					//System.out.println("WAIT");
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
