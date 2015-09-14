@@ -52,6 +52,7 @@ import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.PersonaStat
 import uk.co.thomasc.steamkit.steam3.handlers.steamtrading.SteamTrading;
 import uk.co.thomasc.steamkit.steam3.handlers.steamtrading.callbacks.TradeProposedCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamuser.SteamUser;
+import uk.co.thomasc.steamkit.steam3.handlers.steamuser.callbacks.LoggedOffCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamuser.callbacks.LoggedOnCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamuser.callbacks.LoginKeyCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamuser.callbacks.UpdateMachineAuthCallback;
@@ -61,6 +62,7 @@ import uk.co.thomasc.steamkit.steam3.steamclient.SteamClient;
 import uk.co.thomasc.steamkit.steam3.steamclient.callbackmgr.CallbackMsg;
 import uk.co.thomasc.steamkit.steam3.steamclient.callbackmgr.JobCallback;
 import uk.co.thomasc.steamkit.steam3.steamclient.callbacks.ConnectedCallback;
+import uk.co.thomasc.steamkit.steam3.steamclient.callbacks.DisconnectedCallback;
 import uk.co.thomasc.steamkit.steam3.webapi.WebAPI;
 import uk.co.thomasc.steamkit.types.JobID;
 import uk.co.thomasc.steamkit.types.keyvalue.KeyValue;
@@ -75,18 +77,14 @@ import eu.jhomlala.steambot.controllers.FriendChatController;
 import eu.jhomlala.steambot.controllers.FriendListController;
 import eu.jhomlala.steambot.utils.Log;
 
-public class SteamBot {
+public class SteamBot extends Thread {
 
 	private BotConfiguration botConfiguration;
 	private SteamClient steamClient;
 	private Logger log;
-	// private boolean isRunning;
-	private BotThread botThread;
 	private SteamFriends steamFriends;
 	private SteamTrading steamTrading;
 	private SteamUser steamUser;
-	// private String sessionID;
-	// private String token;
 	private String WebApiNounce;
 
 	// Controllers:
@@ -97,62 +95,80 @@ public class SteamBot {
 
 		this.botConfiguration = BotConfiguration.getInstance();
 		this.log = Log.getInstance();
-		this.steamClient = new SteamClient(ProtocolType.Tcp);
-		// this.isRunning = false;
-
-		this.steamClient.connect();
 		this.friendListController = new FriendListController();
 		this.friendChatController = new FriendChatController(this);
+		this.startSteamClient();
+		
+		this.start();
+
+	}
+	
+	private void startSteamClient() {
+		this.steamClient = new SteamClient(ProtocolType.Tcp);
+		this.steamClient.connect();
 		this.steamFriends = steamClient.getHandler(SteamFriends.class);
 		this.steamTrading = steamClient.getHandler(SteamTrading.class);
 		this.steamUser = steamClient.getHandler(SteamUser.class);
-		// this.sessionID = "";
-		// this.token = "";
-
+		
 	}
-
-	public void start() {
-		log.info("Bot Thread started.");
-		botThread = new BotThread(this);
-		botThread.setRunning(true);
-		if (botThread.isStarted() == false) {
-			botThread.start();
-			botThread.setStarted(true);
+	
+	@Override
+	public void run() {
+		while(true)
+		{
+			if (steamClient != null) {
+				CallbackMsg callback = steamClient.getCallback(true);
+				if (callback != null) {
+					log.info("Received callback: "+callback);
+				}
+				steamClient.waitForCallback(200);
+				
+				if (callback instanceof ConnectedCallback)
+				{
+					onConnectedCallback(callback);
+				} else if (callback instanceof LoggedOnCallback)
+				{
+					onLoggedIn(callback);
+					
+				} else if (callback instanceof FriendsListCallback)
+				{
+					onFriendsListCallback(callback);
+				} else if (callback instanceof ChatInviteCallback)
+				{
+					onChatInviteCallback(callback);
+				} else if (callback instanceof FriendMsgCallback)
+				{
+					onFriendMessage(callback);
+				} else if (callback instanceof PersonaStateCallback)
+				{
+					onPersonaStateCallback(callback);
+				} else if (callback instanceof TradeProposedCallback)
+				{
+					onTradeProposedCallback(callback);
+				} else if (callback instanceof LoginKeyCallback)
+				{
+					onLoginKeyCallback(callback);
+				} else if (callback instanceof JobCallback)
+				{
+					onUpdateMachineAuth(callback);
+				} else if (callback instanceof JobCallback)
+				{
+					onUpdateMachineAuth(callback);
+				} else if (callback instanceof DisconnectedCallback || callback instanceof LoggedOffCallback) {
+					restart();
+				}
+			}
 		}
-
 	}
 
 	public void restart() {
 		steamClient.disconnect();
-		stop();
-		log.info("restarting in 2 seconds");
+		log.info("reconnecting to the steam client in 2 seconds");
 		try {Thread.sleep(2000);} catch (Exception e) {};
-		steamClient.connect();
-		start();
-
+		// steamClient.connect();
+		startSteamClient();
 	}
 
-	public void stop() {
-		log.info("Bot thread stopped.");
-		botThread.setRunning(false);
-		botThread = null;
-	}
-
-	public SteamClient getSteamClient() {
-		return steamClient;
-	}
-
-	public BotConfiguration getBotConfiguration() {
-		return botConfiguration;
-	}
-
-	public BotThread getBotThread() {
-		return botThread;
-	}
-
-	public void setBotThread(BotThread botThread) {
-		this.botThread = botThread;
-	}
 
 	public void onConnectedCallback(CallbackMsg callbackReceived) {
 		ConnectedCallback connectedCallback = (ConnectedCallback) callbackReceived;
@@ -359,7 +375,7 @@ public class SteamBot {
 				sessionKey);
 
 		String urlParameters = "steamid="
-				+ getSteamClient().getSteamId().convertToLong()
+				+ steamClient.getSteamId().convertToLong()
 				+ "&sessionkey=" + WebHelpers.UrlEncode(cryptedSessionKey)
 				+ "&encrypted_loginkey="
 				+ WebHelpers.UrlEncode(cryptedLoginKey) + "&format=vdf";
