@@ -22,8 +22,7 @@ public class FriendChatController {
 		super();
 		this.steamBot = steamBot;
 		this.messageCache = new ArrayList<SteamChat>();
-		this.messageCacheSize = steamBot.getBotConfiguration()
-				.getFriendMessagesCacheSize();
+		this.messageCacheSize = BotConfiguration.getInstance().getFriendMessagesCacheSize();
 		this.log = Log.getInstance();
 	}
 
