@@ -9,6 +9,9 @@ import org.apache.log4j.Logger;
 import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.SteamFriends;
 import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.types.Friend;
 import uk.co.thomasc.steamkit.types.steamid.SteamID;
+
+import com.mvmlobby.dao.LobbySQL;
+
 import eu.jhomlala.steambot.utils.Log;
 public class FriendListController {
 
@@ -50,7 +53,11 @@ public class FriendListController {
 			case RequestRecipient:
 				// Player sent a friend invitation.  Adding the friend will trigger the "Friend" relationship on success.
 				relationship = "RequestRecipient";
-				steamfriends.addFriend(friend.getSteamId());
+				if (new LobbySQL().isMvMGroupMember(friend.getSteamId())) {
+					steamfriends.addFriend(friend.getSteamId());
+				} else {
+					steamfriends.removeFriend(friend.getSteamId());
+				}
 				break;
 				
 			case RequestInitiator:
