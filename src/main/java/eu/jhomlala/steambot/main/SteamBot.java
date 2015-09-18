@@ -452,9 +452,7 @@ public class SteamBot extends Thread implements DBNotificationChecker.NotifyUser
 			msg.append(teamMsg)
 				.append("Or create a team on http://steamcommunity.com/groups/twocitiesveterans/events with this info:\n")
 				.append("Connect with this console command:\n")
-				.append("connect_lobby ").append(lobbyId.convertToLong()).append("\n\n")
-				.append("Or send this link to players:\n")
-				.append("steam://joinlobby/440/").append(lobbyId.convertToLong()).append("\n\n")
+				.append("connect_lobby ").append(lobbyId.convertToLong()).append("\n")
 			;
 
 			sendMessage(senderSteamID, EChatEntryType.ChatMsg, msg.toString());
