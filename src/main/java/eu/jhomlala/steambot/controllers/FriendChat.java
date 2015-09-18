@@ -3,6 +3,7 @@ package eu.jhomlala.steambot.controllers;
 import java.util.ArrayList;
 import java.util.List;
 
+import eu.jhomlala.steambot.configuration.BotConfiguration;
 import eu.jhomlala.steambot.main.SteamBot;
 
 public class FriendChat {
@@ -15,7 +16,7 @@ public class FriendChat {
 		super();
 		this.steamBot = steamBot;
 		this.messageCache = new ArrayList<String>();
-		this.messageCacheSize = steamBot.getBotConfiguration().getFriendMessagesCacheSize();
+		this.messageCacheSize = BotConfiguration.getInstance().getFriendMessagesCacheSize();
 	}
 	
 	public void handleChat()
