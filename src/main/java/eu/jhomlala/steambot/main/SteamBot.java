@@ -35,8 +35,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.security.MessageDigest;
-import java.util.Base64;
-import java.util.Base64.Encoder;
 import java.util.Scanner;
 
 import org.apache.log4j.Logger;
@@ -49,7 +47,6 @@ import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.ChatInviteC
 import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.FriendMsgCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.FriendsListCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.PersonaStateCallback;
-import uk.co.thomasc.steamkit.steam3.handlers.steamtrading.SteamTrading;
 import uk.co.thomasc.steamkit.steam3.handlers.steamtrading.callbacks.TradeProposedCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamuser.SteamUser;
 import uk.co.thomasc.steamkit.steam3.handlers.steamuser.callbacks.LoggedOffCallback;
@@ -83,7 +80,7 @@ public class SteamBot extends Thread {
 	private SteamClient steamClient;
 	private Logger log;
 	private SteamFriends steamFriends;
-	private SteamTrading steamTrading;
+	// private SteamTrading steamTrading;
 	private SteamUser steamUser;
 	private String WebApiNounce;
 
@@ -100,16 +97,17 @@ public class SteamBot extends Thread {
 		this.startSteamClient();
 		
 		this.start();
-
+		
 	}
 	
 	private void startSteamClient() {
+		log.info("startSteamClient - begin");
 		this.steamClient = new SteamClient(ProtocolType.Tcp);
 		this.steamClient.connect();
 		this.steamFriends = steamClient.getHandler(SteamFriends.class);
-		this.steamTrading = steamClient.getHandler(SteamTrading.class);
-		this.steamUser = steamClient.getHandler(SteamUser.class);
-		
+//		this.steamTrading = steamClient.getHandler(SteamTrading.class);
+		this.steamUser = steamClient.getHandler(SteamUser.class);		
+		log.info("startSteamClient - end");
 	}
 	
 	@Override
@@ -118,45 +116,53 @@ public class SteamBot extends Thread {
 		{
 			if (steamClient != null) {
 				CallbackMsg callback = steamClient.getCallback(true);
-				if (callback != null) {
+				if (callback != null  && !(callback instanceof PersonaStateCallback)) {	// too much spam from PersonaStateCallback
 					log.info("Received callback: "+callback);
 				}
 				steamClient.waitForCallback(200);
 				
-				if (callback instanceof ConnectedCallback)
-				{
+				if (callback instanceof ConnectedCallback) {
+					
 					onConnectedCallback(callback);
-				} else if (callback instanceof LoggedOnCallback)
-				{
+					
+				} else if (callback instanceof LoggedOnCallback) {
+					
 					onLoggedIn(callback);
 					
-				} else if (callback instanceof FriendsListCallback)
-				{
+				} else if (callback instanceof FriendsListCallback) {
+					
 					onFriendsListCallback(callback);
-				} else if (callback instanceof ChatInviteCallback)
-				{
+					
+				} else if (callback instanceof ChatInviteCallback) {
+					
 					onChatInviteCallback(callback);
-				} else if (callback instanceof FriendMsgCallback)
-				{
+					
+				} else if (callback instanceof FriendMsgCallback) {
+					
 					onFriendMessage(callback);
-				} else if (callback instanceof PersonaStateCallback)
-				{
+					
+				} else if (callback instanceof PersonaStateCallback) {
+					
 					onPersonaStateCallback(callback);
-				} else if (callback instanceof TradeProposedCallback)
-				{
+					
+				} else if (callback instanceof TradeProposedCallback) {
+					
 					onTradeProposedCallback(callback);
-				} else if (callback instanceof LoginKeyCallback)
-				{
+					
+				} else if (callback instanceof LoginKeyCallback) {
+					
 					onLoginKeyCallback(callback);
-				} else if (callback instanceof JobCallback)
-				{
+					
+				} else if (callback instanceof JobCallback) {
+					
 					onUpdateMachineAuth(callback);
-				} else if (callback instanceof JobCallback)
-				{
-					onUpdateMachineAuth(callback);
+					
 				} else if (callback instanceof DisconnectedCallback || callback instanceof LoggedOffCallback) {
+					
 					restart();
+					
 				}
+				
 			}
 		}
 	}
@@ -199,8 +205,8 @@ public class SteamBot extends Thread {
 				
 				logOnDetails.sentryFileHash = sentryHash;
 				log.info("Sentry file added to login details.");
+				sentryFile.close();
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -257,7 +263,7 @@ public class SteamBot extends Thread {
 	}
 
 	public void onPersonaStateCallback(CallbackMsg callbackReceived) {
-		PersonaStateCallback personaStateCallback = (PersonaStateCallback) callbackReceived;
+//		PersonaStateCallback personaStateCallback = (PersonaStateCallback) callbackReceived;
 	}
 
 	public void setPersonaState(EPersonaState state) {
@@ -279,7 +285,7 @@ public class SteamBot extends Thread {
 		
 		log.info("Updating sentry file.");
 		UpdateMachineAuthCallback updateMachineAuthCallback = (UpdateMachineAuthCallback) call.getCallback();
-		byte[] sentryHash;
+//		byte[] sentryHash;
 		File sentryFile = new File("sentry.bin");
 		if (!sentryFile.exists())
 		{
@@ -287,7 +293,6 @@ public class SteamBot extends Thread {
 				sentryFile.createNewFile();
 				
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -305,6 +310,7 @@ public class SteamBot extends Thread {
 			MessageDigest sha1 = MessageDigest.getInstance("SHA1");
 			byte[] fileContent = new byte[fileSize];
 			iSentryFile.readFully(fileContent);
+			iSentryFile.close();
 			
 			byte[] sentryFileSha1 = sha1.digest(fileContent);
 			
@@ -324,7 +330,6 @@ public class SteamBot extends Thread {
 			
 			
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			log.warn("Error writing sentry file.");
 		}
 		
@@ -338,26 +343,26 @@ public class SteamBot extends Thread {
 	}
 
 	public void onTradeProposedCallback(CallbackMsg callback) {
-		TradeProposedCallback tradeProposedCallback = (TradeProposedCallback) callback;
-		SteamID steamID = tradeProposedCallback.getOtherClient();
+//		TradeProposedCallback tradeProposedCallback = (TradeProposedCallback) callback;
+//		SteamID steamID = tradeProposedCallback.getOtherClient();
 
 		// sendMessage(steamID,EChatEntryType.ChatMsg,"I dont accept direct trades.Type !trade to start trading with me.");
 		// steamTrading.cancelTrade(steamID);
-		log.info("Accept trade request from" + steamID);
-		steamTrading.trade(steamID);
+//		log.info("Accept trade request from" + steamID);
+//		steamTrading.trade(steamID);
 	}
 
 	private KeyValue authenticate(LoginKeyCallback callback) throws Exception {
 
-		Base64.Encoder encoder64 = Base64.getUrlEncoder();
+//		Base64.Encoder encoder64 = Base64.getUrlEncoder();
 		// log.info("Universe:"+steamClient.getConnectedUniverse());
 		// log.info("STEAMID:"+steamClient.getSteamId().convertToLong());
 
-		int myuniqueid = callback.getUniqueId();
-		Encoder en;
-		String uniqueIdString = String.valueOf(myuniqueid);
-		byte[] uniqueid = uniqueIdString.getBytes("UTF-8");
-		String sessionID = encoder64.encodeToString(uniqueid);
+//		int myuniqueid = callback.getUniqueId();
+//		Encoder en;
+//		String uniqueIdString = String.valueOf(myuniqueid);
+//		byte[] uniqueid = uniqueIdString.getBytes("UTF-8");
+//		String sessionID = encoder64.encodeToString(uniqueid);
 
 		byte[] sessionKey = CryptoHelper.GenerateRandomBlock(32);
 		byte[] cryptedSessionKey = null;
@@ -414,13 +419,13 @@ public class SteamBot extends Thread {
 					}
 				}
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
 		}
 
 	}
+	
 	
 	
 	// ChatInviteCallback
