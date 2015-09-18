@@ -1,24 +1,24 @@
 package eu.jhomlala.steambot.controllers;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
+import java.util.Hashtable;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
 
 import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.SteamFriends;
 import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.types.Friend;
-import uk.co.thomasc.steamkit.types.steamid.SteamID;
 import eu.jhomlala.steambot.utils.Log;
+
 public class FriendListController {
 
-	private List<Friend> friendList;
+	private Map<Long,Friend> friendList;	// <accountid,Friend>
 	private Date lastUpdate;
 	private Logger log;
 	
 	public FriendListController()
 	{
-		friendList = new ArrayList<Friend>();
+		friendList = new Hashtable<Long,Friend>();
 		log = Log.getInstance();
 	}
 	
@@ -84,34 +84,19 @@ public class FriendListController {
 		}
 	}
 	
-	public synchronized void addFriend(Friend friend)
+	public void addFriend(Friend friend)
 	{
-		friendList.add(friend);
+		friendList.put(friend.getSteamId().getAccountID(), friend);
 		log.info("Added friend : " + friend.getSteamId());
 	}
 	
 	public void deleteFriend(Friend friend)
 	{
-		Friend friendToDelete = getFriendInList(friend.getSteamId());
-		
-		if (friendToDelete != null) {
-			friendList.remove(friendToDelete);
-			log.info("Deleted friend " + friend.getSteamId());
-		}
+		friendList.remove(friend.getSteamId().getAccountID());
+		log.info("Deleted friend " + friend.getSteamId());
 	}
 
-	public Friend getFriendInList(SteamID steamID)
-	{
-		for (Friend friend: friendList)
-		{
-			if (friend.getSteamId().getAccountID() == steamID.getAccountID())
-			{
-				return friend;
-			}
-		}
-		return null;
-	}
-	public List<Friend> getFriendList() {
+	public Map<Long,Friend> getFriendList() {
 		return friendList;
 	}
 
