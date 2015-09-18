@@ -1,42 +1,11 @@
-/*
- * //
-// Sample 5: SteamGuard
-//
-// this sample goes into detail for how to handle steamguard protected accounts and how to login to them
-//
-// SteamGuard works by enforcing a two factor authentication scheme
-// upon first logon to an account with SG enabled, the steam server will email an authcode to the validated address of the account
-// this authcode token can be used as the second factor during logon, but the token has a limited time span in which it is valid
-//
-// after a client logs on using the authcode, the steam server will generate a blob of random data that the client stores called a "sentry file"
-// this sentry file is then used in all subsequent logons as the second factor
-// ownership of this file provides proof that the machine being used to logon is owned by the client in question
-//
-// the usual login flow is thus:
-// 1. connect to the server
-// 2. logon to account with only username and password
-// at this point, if the account is steamguard protected, the LoggedOnCallback will have a result of AccountLogonDenied
-// the server will disconnect the client and email the authcode
-//
-// the login flow must then be restarted:
-// 1. connect to server
-// 2. logon to account using username, password, and authcode
-// at this point, login wil succeed and a UpdateMachineAuthCallback callback will be posted with the sentry file data from the steam server
-// the client will save the file, and reply to the server informing that it has accepted the sentry file
-// 
-// all subsequent logons will use this flow:
-// 1. connect to server
-// 2. logon to account using username, password, and sha-1 hash of the sentry file
- */
-
 package eu.jhomlala.steambot.main;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.security.MessageDigest;
-import java.util.Base64;
-import java.util.Base64.Encoder;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Scanner;
 
 import org.apache.log4j.Logger;
@@ -50,7 +19,6 @@ import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.FriendMsgCa
 import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.FriendsListCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.callbacks.PersonaStateCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamfriends.types.Friend;
-import uk.co.thomasc.steamkit.steam3.handlers.steamtrading.SteamTrading;
 import uk.co.thomasc.steamkit.steam3.handlers.steamtrading.callbacks.TradeProposedCallback;
 import uk.co.thomasc.steamkit.steam3.handlers.steamuser.SteamUser;
 import uk.co.thomasc.steamkit.steam3.handlers.steamuser.callbacks.LoggedOffCallback;
@@ -75,7 +43,7 @@ import uk.co.thomasc.steamkit.util.crypto.CryptoHelper;
 import uk.co.thomasc.steamkit.util.crypto.RSACrypto;
 
 import com.mvmlobby.dao.LobbySQL;
-import com.mvmlobby.main.DBNotificationChecker;
+import com.mvmlobby.threads.DBNotificationChecker;
 
 import eu.jhomlala.steambot.configuration.BotConfiguration;
 import eu.jhomlala.steambot.controllers.FriendChatController;
@@ -88,7 +56,7 @@ public class SteamBot extends Thread implements DBNotificationChecker.NotifyUser
 	private SteamClient steamClient;
 	private Logger log;
 	private SteamFriends steamFriends;
-	private SteamTrading steamTrading;
+	// private SteamTrading steamTrading;
 	private SteamUser steamUser;
 	private String WebApiNounce;
 	private DBNotificationChecker notificationChecker;
@@ -117,7 +85,7 @@ public class SteamBot extends Thread implements DBNotificationChecker.NotifyUser
 		this.steamClient = new SteamClient(ProtocolType.Tcp);
 		this.steamClient.connect();
 		this.steamFriends = steamClient.getHandler(SteamFriends.class);
-		this.steamTrading = steamClient.getHandler(SteamTrading.class);
+//		this.steamTrading = steamClient.getHandler(SteamTrading.class);
 		this.steamUser = steamClient.getHandler(SteamUser.class);		
 		log.info("startSteamClient - end");
 	}
@@ -217,8 +185,8 @@ public class SteamBot extends Thread implements DBNotificationChecker.NotifyUser
 				
 				logOnDetails.sentryFileHash = sentryHash;
 				log.info("Sentry file added to login details.");
+				sentryFile.close();
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -275,7 +243,7 @@ public class SteamBot extends Thread implements DBNotificationChecker.NotifyUser
 	}
 
 	public void onPersonaStateCallback(CallbackMsg callbackReceived) {
-		PersonaStateCallback personaStateCallback = (PersonaStateCallback) callbackReceived;
+//		PersonaStateCallback personaStateCallback = (PersonaStateCallback) callbackReceived;
 	}
 
 	public void setPersonaState(EPersonaState state) {
@@ -297,7 +265,7 @@ public class SteamBot extends Thread implements DBNotificationChecker.NotifyUser
 		
 		log.info("Updating sentry file.");
 		UpdateMachineAuthCallback updateMachineAuthCallback = (UpdateMachineAuthCallback) call.getCallback();
-		byte[] sentryHash;
+//		byte[] sentryHash;
 		File sentryFile = new File("sentry.bin");
 		if (!sentryFile.exists())
 		{
@@ -305,7 +273,6 @@ public class SteamBot extends Thread implements DBNotificationChecker.NotifyUser
 				sentryFile.createNewFile();
 				
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -323,6 +290,7 @@ public class SteamBot extends Thread implements DBNotificationChecker.NotifyUser
 			MessageDigest sha1 = MessageDigest.getInstance("SHA1");
 			byte[] fileContent = new byte[fileSize];
 			iSentryFile.readFully(fileContent);
+			iSentryFile.close();
 			
 			byte[] sentryFileSha1 = sha1.digest(fileContent);
 			
@@ -342,7 +310,6 @@ public class SteamBot extends Thread implements DBNotificationChecker.NotifyUser
 			
 			
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			log.warn("Error writing sentry file.");
 		}
 		
@@ -356,26 +323,26 @@ public class SteamBot extends Thread implements DBNotificationChecker.NotifyUser
 	}
 
 	public void onTradeProposedCallback(CallbackMsg callback) {
-		TradeProposedCallback tradeProposedCallback = (TradeProposedCallback) callback;
-		SteamID steamID = tradeProposedCallback.getOtherClient();
+//		TradeProposedCallback tradeProposedCallback = (TradeProposedCallback) callback;
+//		SteamID steamID = tradeProposedCallback.getOtherClient();
 
 		// sendMessage(steamID,EChatEntryType.ChatMsg,"I dont accept direct trades.Type !trade to start trading with me.");
 		// steamTrading.cancelTrade(steamID);
-		log.info("Accept trade request from" + steamID);
-		steamTrading.trade(steamID);
+//		log.info("Accept trade request from" + steamID);
+//		steamTrading.trade(steamID);
 	}
 
 	private KeyValue authenticate(LoginKeyCallback callback) throws Exception {
 
-		Base64.Encoder encoder64 = Base64.getUrlEncoder();
+//		Base64.Encoder encoder64 = Base64.getUrlEncoder();
 		// log.info("Universe:"+steamClient.getConnectedUniverse());
 		// log.info("STEAMID:"+steamClient.getSteamId().convertToLong());
 
-		int myuniqueid = callback.getUniqueId();
-		Encoder en;
-		String uniqueIdString = String.valueOf(myuniqueid);
-		byte[] uniqueid = uniqueIdString.getBytes("UTF-8");
-		String sessionID = encoder64.encodeToString(uniqueid);
+//		int myuniqueid = callback.getUniqueId();
+//		Encoder en;
+//		String uniqueIdString = String.valueOf(myuniqueid);
+//		byte[] uniqueid = uniqueIdString.getBytes("UTF-8");
+//		String sessionID = encoder64.encodeToString(uniqueid);
 
 		byte[] sessionKey = CryptoHelper.GenerateRandomBlock(32);
 		byte[] cryptedSessionKey = null;
@@ -432,7 +399,6 @@ public class SteamBot extends Thread implements DBNotificationChecker.NotifyUser
 					}
 				}
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
@@ -496,7 +462,7 @@ public class SteamBot extends Thread implements DBNotificationChecker.NotifyUser
 		}
 	}
 
-	public void sendNewTeamNotification(Long lobby_id, String player_name,
+	public void sendNewTeamNotification(Long team_id, Long lobby_id, String player_name,
 			String mission_name, String tour_name, String region_name,
 			Integer slots_available, String mvm_group_name) {
 		
@@ -510,9 +476,13 @@ public class SteamBot extends Thread implements DBNotificationChecker.NotifyUser
 			.append("Or here for more details on all teams\n")
 			.append("http://mvmlobby.com/teams.php");
 		
-		for (Friend f : friendListController.getFriendList()) {
+		Iterator<Map.Entry<Long,Friend>> i = friendListController.getFriendList().entrySet().iterator();
+		while (i.hasNext()){
+			Map.Entry<Long,Friend> entry = i.next();
+			Friend f = entry.getValue();
 			EPersonaState state = steamFriends.getFriendPersonaState(f.getSteamId());
 			if (state == EPersonaState.Online || state == EPersonaState.LookingToPlay) {
+				log.info(" - sending invitation to " + f.getSteamId().toString() + " for teamid " + team_id);
 				steamFriends.sendChatMessage(f.getSteamId(), EChatEntryType.ChatMsg, msg.toString());
 			}
 		}
