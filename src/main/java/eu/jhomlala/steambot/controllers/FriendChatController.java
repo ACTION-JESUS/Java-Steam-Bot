@@ -62,13 +62,10 @@ public class FriendChatController {
 			
 		}
 
-		if (returnMessage == null)
+		if (returnMessage != null)
 		{
-			returnMessage = "You can chat with me but I don't do anything but give you your MvM lobby ID.";
+			steamBot.sendMessage(callback.getSender(),callback.getEntryType(),returnMessage);
 		}
-		
-		
-		steamBot.sendMessage(callback.getSender(),callback.getEntryType(),returnMessage);
 		
 	}
 	
