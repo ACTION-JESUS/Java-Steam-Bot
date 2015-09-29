@@ -32,7 +32,7 @@ public class DBNotificationChecker extends Thread {
 		
 		StringBuilder sqlSB = new StringBuilder();
 		sqlSB
-			.append("select gl.id, p.name as 'player_name', m.name as 'mission_name', ")
+			.append("select gl.id, p.name as 'player_name', p.steamid, m.name as 'mission_name', ")
 			.append("	t.short_name as 'tour_name', r.name as 'region_name', ")
 			.append("	gl.slots_available, mg.name as 'mvm_group_name', gl.lobby_id ")
 			.append("from group_lobby gl ")
@@ -64,7 +64,8 @@ public class DBNotificationChecker extends Thread {
 					log.info("calling notifyUsersDelegate for teamId " + results.getInt("id"));
 					this.notifyUsersDelegate.sendNewTeamNotification(
 							results.getLong("id"),
-							results.getLong("lobby_id"), 
+							results.getLong("lobby_id"),
+							results.getLong("steamid"),
 							results.getString("player_name"),
 							results.getString("mission_name"),
 							results.getString("tour_name"),
@@ -94,7 +95,7 @@ public class DBNotificationChecker extends Thread {
 
 	public static interface NotifyUsers {
 		public void sendNewTeamNotification(Long team_id, Long lobby_id,
-				String player_name, String mission_name, String tour_name,
+				Long steam64id, String player_name, String mission_name, String tour_name,
 				String region_name, Integer slots_available,
 				String mvm_group_name);
 	}
