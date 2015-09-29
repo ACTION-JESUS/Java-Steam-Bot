@@ -460,12 +460,12 @@ public class SteamBot extends Thread implements DBNotificationChecker.NotifyUser
 		}
 	}
 
-	public void sendNewTeamNotification(Long team_id, Long lobby_id, String player_name,
+	public void sendNewTeamNotification(Long team_id, Long lobby_id, Long leaderSteam64ID, String player_name,
 			String mission_name, String tour_name, String region_name,
 			Integer slots_available, String mvm_group_name) {
 		
-		StringBuilder msg = new StringBuilder();
-		msg
+		StringBuilder msgSB = new StringBuilder();
+		msgSB
 			.append("\n").append(player_name).append(" created a team:").append("\n")
 			.append("Tour: ").append(tour_name).append("\n")
 			.append("Mission: ").append(mission_name).append("\n")
@@ -473,18 +473,35 @@ public class SteamBot extends Thread implements DBNotificationChecker.NotifyUser
 			.append("Click here to join: steam://joinlobby/440/").append(lobby_id).append("\n")
 			.append("Or here for more details on all teams\n")
 			.append("http://mvmlobby.com/teams.php");
+		final String msg = msgSB.toString();
 		
+		int playersNotified = 0;
 		Iterator<Map.Entry<Long,Friend>> i = friendListController.getFriendList().entrySet().iterator();
 		while (i.hasNext()){
 			Map.Entry<Long,Friend> entry = i.next();
 			Friend f = entry.getValue();
 			EPersonaState state = steamFriends.getFriendPersonaState(f.getSteamId());
 			if (state == EPersonaState.Online || state == EPersonaState.LookingToPlay) {
-				log.info(" - sending invitation to " + f.getSteamId().toString() + " for teamid " + team_id);
-				steamFriends.sendChatMessage(f.getSteamId(), EChatEntryType.ChatMsg, msg.toString());
+				// Notify all online friends except the team leader
+				if (f.getSteamId().convertToLong() != leaderSteam64ID) {
+					++playersNotified;
+					log.info(" - sending invitation to " + f.getSteamId().toString() + " for teamid " + team_id);
+					steamFriends.sendChatMessage(f.getSteamId(), EChatEntryType.ChatMsg, msg);
+				}
+			} else {
+				log.info(" - invitation NOT sent to " + f.getSteamId().toString() + " for teamid " + team_id + ". PersonaState=" + EPersonaState.getStringValue(state));
 			}
 		}
 		
+		// Send the team leader a notification with a summary
+		SteamID leaderSteamID = new SteamID(leaderSteam64ID);
+		String summaryMsg;
+		if (playersNotified == 1) {
+			summaryMsg = "\n\n1 other online player was notified.";
+		} else {
+			summaryMsg = "\n\n" + playersNotified + " other online players were notified.";
+		}
+		steamFriends.sendChatMessage(leaderSteamID, EChatEntryType.ChatMsg, msg + summaryMsg);
+		
 	}
-
 }
