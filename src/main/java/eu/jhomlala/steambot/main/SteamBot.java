@@ -35,6 +35,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.security.MessageDigest;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Scanner;
 
 import org.apache.log4j.Logger;
@@ -69,6 +72,9 @@ import uk.co.thomasc.steamkit.util.WebHelpers;
 import uk.co.thomasc.steamkit.util.cSharp.ip.ProtocolType;
 import uk.co.thomasc.steamkit.util.crypto.CryptoHelper;
 import uk.co.thomasc.steamkit.util.crypto.RSACrypto;
+
+import com.mvmlobby.dao.MvMLobbyDAOHelper;
+
 import eu.jhomlala.steambot.configuration.BotConfiguration;
 import eu.jhomlala.steambot.controllers.FriendChatController;
 import eu.jhomlala.steambot.controllers.FriendListController;
@@ -463,10 +469,20 @@ public class SteamBot extends Thread {
 			msg.append("\nConnect with this console command:\n")
 				.append("connect_lobby ").append(lobbyId.convertToLong()).append("\n\n")
 				.append("Or join using this link:\n")
-				.append("steam://joinlobby/440/").append(lobbyId.convertToLong()).append("\n\n")
-				.append("Create a Two Cities Veterans event here:\n")
-				.append("http://steamcommunity.com/groups/twocitiesveterans/events")
+				.append("steam://joinlobby/440/").append(lobbyId.convertToLong())
 			;
+			
+			HashMap<String,String> groupHash = MvMLobbyDAOHelper.getInstance().getPlayerMvMGroups(new Long(senderSteamID.convertToLong()).toString());
+			Iterator<?> i = groupHash.entrySet().iterator();
+			while (i.hasNext()) {
+				// key = group custom_url
+				// value = group name
+				Map.Entry<String,String> groupInfo = (Map.Entry<String,String>)i.next();
+				msg
+					.append("\n\nCreate a ").append(groupInfo.getValue()).append(" event here:\n")
+					.append("http://steamcommunity.com/groups/").append(groupInfo.getKey()).append("/events")
+				;
+			}
 
 			sendMessage(senderSteamID, EChatEntryType.ChatMsg, msg.toString());
 
