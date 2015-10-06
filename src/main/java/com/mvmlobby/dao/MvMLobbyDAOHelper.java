@@ -21,7 +21,6 @@ public class MvMLobbyDAOHelper {
 	private static String password;
 	private static final String DRIVER_CLASS = "com.mysql.jdbc.Driver";
 	private String GET_PLAYER_GROUPS_SQL;
-	private Connection connection = null;
 	
 	public static MvMLobbyDAOHelper getInstance() {
 		return instance;
@@ -45,16 +44,8 @@ public class MvMLobbyDAOHelper {
 		;
 		GET_PLAYER_GROUPS_SQL = sqlSB.toString();
 		
-		// Create a connection just once
 		try {
 			Class.forName(DRIVER_CLASS);
-			
-			try {
-				connection = DriverManager.getConnection(url, userid, password);
-			} catch (SQLException e) {
-				System.out.println("ERROR: Unable to Connect to Database.");
-			}
-
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}
@@ -62,11 +53,13 @@ public class MvMLobbyDAOHelper {
 
 	public HashMap<String,String> getPlayerMvMGroups(String steam64ID) {
 		Logger log = Log.getInstance();
+		Connection connection = null;
 		PreparedStatement preparedStmt = null;
 		ResultSet results = null;
 		HashMap<String,String> groupHash = new HashMap<String,String>();
 
 		try {
+			connection = DriverManager.getConnection(url, userid, password);
 			preparedStmt = connection.prepareStatement(GET_PLAYER_GROUPS_SQL);
 			preparedStmt.setString(1, steam64ID);
 			results = preparedStmt.executeQuery();
@@ -86,13 +79,17 @@ public class MvMLobbyDAOHelper {
 			if (results != null) {
 				try {
 					results.close();
-				} catch (SQLException e) {
-				}
+				} catch (SQLException e) { log.info("SQL error: " + e.toString()); }
 			}
 			if (preparedStmt != null) {
 				try {
 					preparedStmt.close();
-				} catch (SQLException e) {}
+				} catch (SQLException e) { log.info("SQL error: " + e.toString()); }
+			}
+			if (connection != null) {
+				try {
+					connection.close();
+				} catch (SQLException e) { log.info("SQL error: " + e.toString()); }
 			}
 		}
 		
