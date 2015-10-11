@@ -217,7 +217,6 @@ public class SteamBot extends Thread implements DBNotificationChecker.NotifyUser
 				scanIn.close();
 
 				this.botConfiguration.setSteamGuardCode(authCode);
-				restart();
 
 			} else {
 				if (loggedOnCallBack.getResult() == EResult.InvalidLoginAuthCode) {
@@ -228,11 +227,12 @@ public class SteamBot extends Thread implements DBNotificationChecker.NotifyUser
 					scanIn.close();
 
 					this.botConfiguration.setSteamGuardCode(authCode);
-					restart();
 				} else {
 					log.info("Error code: " + loggedOnCallBack.getResult());
 				}
 			}
+			
+			restart();
 		}
 
 	}
@@ -440,17 +440,19 @@ public class SteamBot extends Thread implements DBNotificationChecker.NotifyUser
 
 			 */
 			StringBuilder msg = new StringBuilder();
-			String teamMsg = "\n*** An error occurred creating your team on mvmlobby.com\n\n";
+			String teamMsg = "\n\n*** An error occurred creating your team on mvmlobby.com.\nPlease notify ACTION JESUS.\n\n";
 			try {
 				if (new LobbySQL().insertPlayerLobbyId(senderSteamID, lobbyId)) {
-					teamMsg = "\nClick here to set up a team and send invites:\nhttp://mvmlobby.com/teams.php\n\n";
+					teamMsg = "\n\nClick here to set up a team and send invites:\nhttp://mvmlobby.com/teams.php\n\n";
 				}
 			} catch (Exception e) {
-				log.info("An error occurred while running LobbySQL.insertPlayerLobbyId");
+				log.info("*** An error occurred while running LobbySQL.insertPlayerLobbyId");
+				log.info("  - lobbyID = " + lobbyId);
+				log.info("  - senderSteamID = " + senderSteamID);
 			}
 			
 			msg.append(teamMsg)
-				.append("Or create a team on http://steamcommunity.com/groups/twocitiesveterans/events with this info:\n")
+				.append("Or create an event on http://steamcommunity.com/groups/twocitiesveterans/events with this info:\n")
 				.append("Connect with this console command:\n")
 				.append("connect_lobby ").append(lobbyId.convertToLong()).append("\n")
 			;
