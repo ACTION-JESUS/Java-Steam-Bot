@@ -243,7 +243,6 @@ public class SteamBot extends Thread {
 				scanIn.close();
 
 				this.botConfiguration.setSteamGuardCode(authCode);
-				restart();
 
 			} else {
 				if (loggedOnCallBack.getResult() == EResult.InvalidLoginAuthCode) {
@@ -254,11 +253,11 @@ public class SteamBot extends Thread {
 					scanIn.close();
 
 					this.botConfiguration.setSteamGuardCode(authCode);
-					restart();
 				} else {
 					log.info("Error code: " + loggedOnCallBack.getResult());
 				}
 			}
+			restart();
 		}
 
 	}
